@@ -1,0 +1,304 @@
+### Variables
+@baseUrl = http://localhost:5000/api
+@token = TU_TOKEN_AQUI
+
+### ============================================
+### 🔍 BÚSQUEDA Y FILTROS AVANZADOS
+### ============================================
+
+### Búsqueda simple por texto
+GET {{baseUrl}}/products?search=martillo
+
+### Filtrar por categoría única
+GET {{baseUrl}}/products?category=Herramientas Manuales
+
+### Filtrar por MÚLTIPLES categorías (separadas por coma)
+GET {{baseUrl}}/products?categories=Herramientas Manuales,Herramientas Eléctricas
+
+### Filtrar por marca única
+GET {{baseUrl}}/products?brand=Stanley
+
+### Filtrar por MÚLTIPLES marcas (separadas por coma)
+GET {{baseUrl}}/products?brands=Stanley,Bosch,Truper
+
+### Filtrar por rango de precio
+GET {{baseUrl}}/products?minPrice=10&maxPrice=50
+
+### Filtrar por rating mínimo (productos con 4 estrellas o más)
+GET {{baseUrl}}/products?minRating=4
+
+### Filtrar por tags (separados por coma)
+GET {{baseUrl}}/products?tags=martillo,carpinteria
+
+### Solo productos en stock
+GET {{baseUrl}}/products?inStock=true
+
+### Solo productos destacados
+GET {{baseUrl}}/products?featured=true
+
+### ============================================
+### 🎯 FILTROS COMBINADOS COMPLEJOS
+### ============================================
+
+### Búsqueda + categoría + precio + stock
+GET {{baseUrl}}/products?search=taladro&category=Herramientas Eléctricas&minPrice=50&maxPrice=150&inStock=true
+
+### Múltiples categorías + múltiples marcas + rating
+GET {{baseUrl}}/products?categories=Herramientas Manuales,Pinturas&brands=Stanley,Comex&minRating=4
+
+### Tags + precio + ordenamiento
+GET {{baseUrl}}/products?tags=electrico,profesional&minPrice=80&sortBy=price&order=ASC
+
+### Búsqueda avanzada con todos los filtros
+GET {{baseUrl}}/products?search=herramienta&categories=Herramientas Manuales,Herramientas Eléctricas&brands=Stanley,Bosch&minPrice=10&maxPrice=100&minRating=3&inStock=true&featured=false&tags=profesional&sortBy=sales_count&order=DESC&page=1&limit=12
+
+### ============================================
+### 📊 ORDENAMIENTO
+### ============================================
+
+### Ordenar por precio (menor a mayor)
+GET {{baseUrl}}/products?sortBy=price&order=ASC
+
+### Ordenar por precio (mayor a menor)
+GET {{baseUrl}}/products?sortBy=price&order=DESC
+
+### Ordenar por más vendidos
+GET {{baseUrl}}/products?sortBy=sales_count&order=DESC
+
+### Ordenar por mejor calificados
+GET {{baseUrl}}/products?sortBy=rating_average&order=DESC
+
+### Ordenar por más vistos
+GET {{baseUrl}}/products?sortBy=views&order=DESC
+
+### Ordenar por nombre alfabéticamente
+GET {{baseUrl}}/products?sortBy=name&order=ASC
+
+### Ordenar por más recientes
+GET {{baseUrl}}/products?sortBy=createdAt&order=DESC
+
+### ============================================
+### 📄 PAGINACIÓN
+### ============================================
+
+### Primera página (12 productos por defecto)
+GET {{baseUrl}}/products?page=1
+
+### Segunda página con 20 productos
+GET {{baseUrl}}/products?page=2&limit=20
+
+### Tercera página con 5 productos
+GET {{baseUrl}}/products?page=3&limit=5
+
+### ============================================
+### 🏆 PRODUCTOS ESPECIALES
+### ============================================
+
+### Productos destacados (8 por defecto)
+GET {{baseUrl}}/products/featured
+
+### Productos destacados (solo 4)
+GET {{baseUrl}}/products/featured?limit=4
+
+### Productos más vendidos (todos)
+GET {{baseUrl}}/products/best-sellers
+
+### Productos más vendidos (top 5)
+GET {{baseUrl}}/products/best-sellers?limit=5
+
+### Productos más vendidos de una categoría
+GET {{baseUrl}}/products/best-sellers?category=Herramientas Manuales&limit=10
+
+### Productos relacionados con un producto específico
+GET {{baseUrl}}/products/1/related?limit=4
+
+### ============================================
+### 📋 INFORMACIÓN AGREGADA
+### ============================================
+
+### Obtener todas las marcas disponibles
+GET {{baseUrl}}/products/brands
+
+### Obtener rango de precios (min/max)
+GET {{baseUrl}}/products/price-range
+
+### Obtener rango de precios de una categoría
+GET {{baseUrl}}/products/price-range?category=Herramientas Eléctricas
+
+### ============================================
+### 🖼️ GESTIÓN DE IMÁGENES (ADMIN)
+### ============================================
+
+### Establecer imágenes de un producto
+PATCH {{baseUrl}}/products/1/images
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "images": [
+    "https://example.com/imagen1.jpg",
+    "https://example.com/imagen2.jpg",
+    "https://example.com/imagen3.jpg"
+  ],
+  "thumbnail": "https://example.com/imagen1.jpg",
+  "operation": "set"
+}
+
+### Agregar más imágenes a un producto
+PATCH {{baseUrl}}/products/1/images
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "images": [
+    "https://example.com/imagen4.jpg",
+    "https://example.com/imagen5.jpg"
+  ],
+  "operation": "add"
+}
+
+### Remover imágenes específicas
+PATCH {{baseUrl}}/products/1/images
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "images": [
+    "https://example.com/imagen2.jpg"
+  ],
+  "operation": "remove"
+}
+
+### Actualizar solo el thumbnail
+PATCH {{baseUrl}}/products/1/images
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "thumbnail": "https://example.com/nueva-miniatura.jpg"
+}
+
+### ============================================
+### 📦 GESTIÓN DE STOCK (ADMIN)
+### ============================================
+
+### Establecer stock exacto
+PATCH {{baseUrl}}/products/1/stock
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "stock": 100,
+  "operation": "set"
+}
+
+### Agregar unidades al stock
+PATCH {{baseUrl}}/products/1/stock
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "stock": 20,
+  "operation": "add"
+}
+
+### Restar unidades del stock
+PATCH {{baseUrl}}/products/1/stock
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "stock": 5,
+  "operation": "subtract"
+}
+
+### Obtener productos con bajo stock
+GET {{baseUrl}}/products/admin/low-stock
+Authorization: Bearer {{token}}
+
+### ============================================
+### ✏️ CRUD PRODUCTOS (ADMIN)
+### ============================================
+
+### Crear producto completo
+POST {{baseUrl}}/products
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Sierra Caladora 750W",
+  "description": "Sierra caladora profesional de 750W con velocidad variable, incluye 5 hojas de sierra para diferentes materiales. Ideal para cortes curvos y rectos en madera, metal y plástico.",
+  "short_description": "Sierra caladora 750W con accesorios",
+  "price": 129.99,
+  "compare_price": 159.99,
+  "cost": 80.00,
+  "sku": "SIER-CAL-001",
+  "barcode": "7501234567890",
+  "stock": 20,
+  "min_stock": 5,
+  "category": "Herramientas Eléctricas",
+  "category_id": 2,
+  "brand": "Makita",
+  "unit": "unidad",
+  "weight": 2.5,
+  "dimensions": {
+    "length": 25,
+    "width": 10,
+    "height": 20
+  },
+  "images": [
+    "https://example.com/sierra-cal-1.jpg",
+    "https://example.com/sierra-cal-2.jpg"
+  ],
+  "thumbnail": "https://example.com/sierra-cal-1.jpg",
+  "tags": ["sierra", "caladora", "makita", "750w", "profesional"],
+  "features": {
+    "potencia": "750W",
+    "velocidad_variable": true,
+    "rpm_min": "800",
+    "rpm_max": "3000",
+    "profundidad_corte_madera": "65mm",
+    "profundidad_corte_metal": "8mm",
+    "incluye": "5 hojas de sierra"
+  },
+  "is_featured": true,
+  "requires_shipping": true,
+  "tax_rate": 0,
+  "meta_title": "Sierra Caladora Makita 750W - Herramientas Profesionales",
+  "meta_description": "Compra la mejor sierra caladora Makita de 750W con velocidad variable. Incluye 5 hojas de sierra. Ideal para profesionales y aficionados."
+}
+
+### Actualizar producto
+PUT {{baseUrl}}/products/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "price": 14.99,
+  "stock": 55,
+  "is_featured": true
+}
+
+### Eliminar producto (soft delete)
+DELETE {{baseUrl}}/products/1
+Authorization: Bearer {{token}}
+
+### ============================================
+### 🔍 CASOS DE USO REALES
+### ============================================
+
+### Usuario busca "martillo" y quiere ver solo Stanley
+GET {{baseUrl}}/products?search=martillo&brand=Stanley
+
+### Usuario busca herramientas de menos de $30 en stock
+GET {{baseUrl}}/products?maxPrice=30&inStock=true&category=Herramientas Manuales
+
+### Usuario busca productos mejor calificados ordenados por precio
+GET {{baseUrl}}/products?minRating=4&sortBy=price&order=ASC
+
+### Usuario busca en múltiples categorías con presupuesto limitado
+GET {{baseUrl}}/products?categories=Herramientas Manuales,Ferretería General&maxPrice=25&inStock=true&page=1&limit=20
+
+### Admin busca productos de Stanley con bajo stock
+GET {{baseUrl}}/products?brand=Stanley&inStock=true&sortBy=stock&order=ASC
+Authorization: Bearer {{token}}

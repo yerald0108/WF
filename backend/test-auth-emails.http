@@ -1,0 +1,60 @@
+### Variables
+@baseUrl = http://localhost:5000/api
+@testEmail = yeraldfuste@gmail.com
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwiaWF0IjoxNzY4ODUwOTE4LCJleHAiOjE3Njk0NTU3MTh9.6IbFAX12-eu6GK_4xViVh8AKfaRuoLc22iQ4xcmHTf4
+
+### ============================================
+### 📧 PRUEBAS DE EMAIL
+### ============================================
+
+### 1️⃣ Registrar usuario (envía email de verificación)
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "{{testEmail}}",
+  "password": "password123",
+  "first_name": "Juan",
+  "last_name": "Pérez",
+  "phone": "+53-5-234-5678"
+}
+
+### 2️⃣ Solicitar recuperación de contraseña (envía email)
+POST {{baseUrl}}/auth/forgot-password
+Content-Type: application/json
+
+{
+  "email": "{{testEmail}}"
+}
+
+### 3️⃣ Verificar email con token (usa el token del email)
+GET {{baseUrl}}/auth/verify/TOKEN_DEL_EMAIL_AQUI
+
+### 4️⃣ Resetear contraseña con token (usa el token del email)
+POST {{baseUrl}}/auth/reset-password/TOKEN_DEL_EMAIL_AQUI
+Content-Type: application/json
+
+{
+  "password": "nuevaPassword123"
+}
+
+### 5️⃣ Reenviar email de verificación (requiere estar logueado)
+POST {{baseUrl}}/auth/resend-verification
+Authorization: Bearer {{token}}
+
+### ============================================
+### 🔍 VERIFICAR ESTADO
+### ============================================
+
+### Login para obtener token
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{testEmail}}",
+  "password": "password123"
+}
+
+### Ver mi perfil (verificar si email está verificado)
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{token}}

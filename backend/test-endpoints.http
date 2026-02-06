@@ -1,0 +1,201 @@
+### Variables
+@baseUrl = http://localhost:5000/api
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNzcwNDEyNjYxLCJleHAiOjE3NzEwMTc0NjF9.9nmoSLKKiz0WhNoMk4nx5XOASN1V44B5Imxqe2SQQG8
+
+### ============================================
+### 🏥 HEALTH CHECK
+### ============================================
+
+GET {{baseUrl}}/health
+
+### ============================================
+### 👤 AUTENTICACIÓN
+### ============================================
+
+### Registrar Usuario
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "juan@ejemplo.com",
+  "password": "password123",
+  "first_name": "Juan",
+  "last_name": "Pérez",
+  "phone": "1234567890"
+}
+
+### Login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@ferreteria.com",
+  "password": "admin123"
+}
+
+### Obtener perfil actual (requiere token)
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{token}}
+
+### ============================================
+### 📂 CATEGORÍAS
+### ============================================
+
+### Obtener todas las categorías
+GET {{baseUrl}}/categories
+
+### Obtener categorías con subcategorías
+GET {{baseUrl}}/categories?includeSubcategories=true
+
+### Obtener árbol de categorías (jerárquico)
+GET {{baseUrl}}/categories/tree
+
+### Obtener categoría por ID
+GET {{baseUrl}}/categories/1
+
+### Obtener categoría por slug
+GET {{baseUrl}}/categories/herramientas-manuales
+
+### Obtener productos de una categoría
+GET {{baseUrl}}/categories/1/products
+
+### Obtener productos de categoría por slug con paginación
+GET {{baseUrl}}/categories/herramientas-manuales/products?page=1&limit=10
+
+### Crear nueva categoría (requiere admin token)
+POST {{baseUrl}}/categories
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Jardinería",
+  "description": "Herramientas y accesorios para jardinería",
+  "icon": "flower",
+  "order": 7
+}
+
+### Actualizar categoría (requiere admin token)
+PUT {{baseUrl}}/categories/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "description": "Herramientas manuales profesionales y de uso doméstico",
+  "order": 1
+}
+
+### Obtener estadísticas de categorías (requiere admin token)
+GET {{baseUrl}}/categories/admin/stats
+Authorization: Bearer {{token}}
+
+### Eliminar categoría (requiere admin token)
+DELETE {{baseUrl}}/categories/7
+Authorization: Bearer {{token}}
+
+### ============================================
+### 🛍️ PRODUCTOS
+### ============================================
+
+### Listar todos los productos
+GET {{baseUrl}}/products
+
+### Listar productos con paginación
+GET {{baseUrl}}/products?page=1&limit=5
+
+### Buscar productos
+GET {{baseUrl}}/products?search=martillo
+
+### Filtrar por categoría
+GET {{baseUrl}}/products?category=Herramientas Manuales
+
+### Filtrar por rango de precio
+GET {{baseUrl}}/products?minPrice=10&maxPrice=50
+
+### Solo productos en stock
+GET {{baseUrl}}/products?inStock=true
+
+### Productos destacados
+GET {{baseUrl}}/products/featured?limit=4
+
+### Productos más vendidos
+GET {{baseUrl}}/products/best-sellers?limit=5
+
+### Obtener producto por ID
+GET {{baseUrl}}/products/1
+
+### Obtener producto por slug
+GET {{baseUrl}}/products/martillo-de-carpintero-16oz
+
+### Obtener productos relacionados
+GET {{baseUrl}}/products/1/related?limit=4
+
+### Crear producto (requiere admin token)
+POST {{baseUrl}}/products
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Sierra Circular 1400W",
+  "description": "Sierra circular profesional de 1400W",
+  "short_description": "Sierra circular 1400W profesional",
+  "price": 189.99,
+  "compare_price": 229.99,
+  "cost": 120.00,
+  "sku": "SIER-001",
+  "stock": 15,
+  "min_stock": 3,
+  "category": "Herramientas Eléctricas",
+  "category_id": 2,
+  "brand": "Makita",
+  "tags": ["sierra", "circular", "makita"],
+  "is_featured": true
+}
+
+### Actualizar producto (requiere admin token)
+PUT {{baseUrl}}/products/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "price": 14.99,
+  "stock": 55
+}
+
+### Actualizar stock (requiere admin token)
+PATCH {{baseUrl}}/products/1/stock
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "stock": 20,
+  "operation": "add"
+}
+
+### Obtener productos con bajo stock (requiere admin token)
+GET {{baseUrl}}/products/admin/low-stock
+Authorization: Bearer {{token}}
+
+### ============================================
+### 📍 UBICACIONES (Provincias y Municipios)
+### ============================================
+
+### Obtener todas las provincias
+GET {{baseUrl}}/locations/provinces
+
+### Obtener municipios de La Habana
+GET {{baseUrl}}/locations/municipalities/La Habana
+
+### Obtener todas las divisiones
+GET {{baseUrl}}/locations/all
+
+### Validar ubicación
+POST {{baseUrl}}/locations/validate
+Content-Type: application/json
+
+{
+  "province": "La Habana",
+  "city": "Plaza de la Revolución"
+}
+
+### Buscar municipios
+GET {{baseUrl}}/locations/search?q=santa
