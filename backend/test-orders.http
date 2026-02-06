@@ -1,0 +1,428 @@
+### Variables
+@baseUrl = http://localhost:5000/api
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiaWF0IjoxNzcwNDE0OTE5LCJleHAiOjE3NzEwMTk3MTl9.SJNvtf3HdZosY_M5ElsZrsIgmIlCVINmoAm6lLGkmR4
+@adminToken = TU_ADMIN_TOKEN_AQUI
+@orderId = 1
+
+### ============================================
+### 🛍️ ÓRDENES - FLUJO COMPLETO DE COMPRA
+### ============================================
+
+### PASO 1: Login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "cliente@ejemplo.com",
+  "password": "password123"
+}
+
+### PASO 2: Agregar productos al carrito
+POST {{baseUrl}}/cart/items
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "productId": 1,
+  "quantity": 2
+}
+
+###
+POST {{baseUrl}}/cart/items
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "productId": 2,
+  "quantity": 1
+}
+
+### PASO 3: Ver carrito
+GET {{baseUrl}}/cart
+Authorization: Bearer {{token}}
+
+### PASO 4: Validar carrito antes de checkout
+GET {{baseUrl}}/cart/validate
+Authorization: Bearer {{token}}
+
+### PASO 5: Crear orden (checkout)
+POST {{baseUrl}}/orders
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "addressId": 1,
+  "paymentMethod": "cash",
+  "deliveryType": "delivery",
+  "deliveryDate": "2024-12-25",
+  "deliveryTimeSlot": "14:00-18:00",
+  "customerNotes": "Por favor tocar el timbre dos veces"
+}
+
+### ============================================
+### 📋 ÓRDENES - CONSULTAS DE USUARIO
+### ============================================
+
+### Ver mis órdenes
+GET {{baseUrl}}/orders
+Authorization: Bearer {{token}}
+
+### Ver mis órdenes con filtros
+GET {{baseUrl}}/orders?page=1&limit=5&status=pending
+Authorization: Bearer {{token}}
+
+### Ver mis órdenes por rango de fechas
+GET {{baseUrl}}/orders?startDate=2024-01-01&endDate=2024-12-31
+Authorization: Bearer {{token}}
+
+### Ver orden específica
+GET {{baseUrl}}/orders/{{orderId}}
+Authorization: Bearer {{token}}
+
+### Cancelar orden
+POST {{baseUrl}}/orders/{{orderId}}/cancel
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "reason": "Cambié de opinión sobre la compra"
+}
+
+### ============================================
+### 🔧 CHECKOUT - DIFERENTES ESCENARIOS
+### ============================================
+
+### Orden con recogida en tienda
+POST {{baseUrl}}/orders
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "paymentMethod": "cash",
+  "deliveryType": "pickup",
+  "customerNotes": "Recogeré mañana por la tarde"
+}
+
+### Orden con transferencia bancaria
+POST {{baseUrl}}/orders
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "addressId": 1,
+  "paymentMethod": "transfer",
+  "deliveryType": "delivery",
+  "deliveryDate": "2024-12-26",
+  "deliveryTimeSlot": "08:00-12:00"
+}
+
+### Orden con tarjeta
+POST {{baseUrl}}/orders
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "addressId": 1,
+  "paymentMethod": "card",
+  "deliveryType": "delivery"
+}
+
+### ============================================
+### 👑 ADMIN - GESTIÓN DE ÓRDENES
+### ============================================
+
+### Login como admin
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@ferreteria.com",
+  "password": "admin123"
+}
+
+### Ver todas las órdenes
+GET {{baseUrl}}/orders/admin/all
+Authorization: Bearer {{adminToken}}
+
+### Ver todas las órdenes con filtros
+GET {{baseUrl}}/orders/admin/all?page=1&limit=20&status=pending
+Authorization: Bearer {{adminToken}}
+
+### Ver todas las órdenes por fecha
+GET {{baseUrl}}/orders/admin/all?startDate=2024-01-01&endDate=2024-12-31
+Authorization: Bearer {{adminToken}}
+
+### Ver órdenes recientes
+GET {{baseUrl}}/orders/admin/recent?limit=10
+Authorization: Bearer {{adminToken}}
+
+### Buscar órdenes
+GET {{baseUrl}}/orders/admin/search?q=juan
+Authorization: Bearer {{adminToken}}
+
+### Buscar por número de orden
+GET {{baseUrl}}/orders/admin/search?q=ORD-
+Authorization: Bearer {{adminToken}}
+
+### Buscar por email
+GET {{baseUrl}}/orders/admin/search?q=cliente@ejemplo.com
+Authorization: Bearer {{adminToken}}
+
+### Obtener estadísticas
+GET {{baseUrl}}/orders/admin/stats
+Authorization: Bearer {{adminToken}}
+
+### Obtener estadísticas por período
+GET {{baseUrl}}/orders/admin/stats?startDate=2024-01-01&endDate=2024-12-31
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 🔄 ADMIN - ACTUALIZACIÓN DE ESTADOS
+### ============================================
+
+### Confirmar orden (pending → confirmed)
+PUT {{baseUrl}}/orders/{{orderId}}/status
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "confirmed",
+  "notes": "Pago verificado, orden confirmada"
+}
+
+### Pasar a procesamiento (confirmed → processing)
+PUT {{baseUrl}}/orders/{{orderId}}/status
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "processing",
+  "notes": "Orden en preparación"
+}
+
+### Marcar como lista (processing → ready)
+PUT {{baseUrl}}/orders/{{orderId}}/status
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "ready",
+  "notes": "Orden lista para envío/recogida"
+}
+
+### Marcar como enviada (ready → shipped)
+PUT {{baseUrl}}/orders/{{orderId}}/status
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "shipped",
+  "notes": "Orden despachada",
+  "trackingNumber": "TRACK-123456"
+}
+
+### Marcar como entregada (shipped → delivered)
+PUT {{baseUrl}}/orders/{{orderId}}/status
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "delivered",
+  "notes": "Orden entregada exitosamente"
+}
+
+### Cancelar orden (admin)
+PUT {{baseUrl}}/orders/{{orderId}}/status
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "cancelled",
+  "notes": "Producto agotado, se reembolsará el dinero"
+}
+
+### ============================================
+### 💳 ADMIN - GESTIÓN DE PAGOS
+### ============================================
+
+### Marcar pago como recibido
+PUT {{baseUrl}}/orders/{{orderId}}/payment
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "paymentStatus": "paid",
+  "paymentReference": "TRANS-789456"
+}
+
+### Marcar pago como fallido
+PUT {{baseUrl}}/orders/{{orderId}}/payment
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "paymentStatus": "failed"
+}
+
+### Marcar como reembolsado
+PUT {{baseUrl}}/orders/{{orderId}}/payment
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "paymentStatus": "refunded",
+  "paymentReference": "REFUND-123"
+}
+
+### ============================================
+### 🧪 CASOS DE PRUEBA - ERRORES
+### ============================================
+
+### Error: Carrito vacío
+POST {{baseUrl}}/orders
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "addressId": 1,
+  "paymentMethod": "cash"
+}
+
+### Error: Dirección inválida
+POST {{baseUrl}}/orders
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "addressId": 999,
+  "paymentMethod": "cash",
+  "deliveryType": "delivery"
+}
+
+### Error: Método de pago inválido
+POST {{baseUrl}}/orders
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "addressId": 1,
+  "paymentMethod": "bitcoin"
+}
+
+### Error: Cancelar orden ya entregada
+POST {{baseUrl}}/orders/1/cancel
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "reason": "No quiero la orden"
+}
+
+### Error: Transición de estado inválida
+PUT {{baseUrl}}/orders/{{orderId}}/status
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "delivered",
+  "notes": "Salto de estados no permitido"
+}
+
+### ============================================
+### 📊 FLUJO COMPLETO DE EJEMPLO
+### ============================================
+
+### 1. Login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "cliente@ejemplo.com",
+  "password": "password123"
+}
+
+### 2. Agregar productos
+POST {{baseUrl}}/cart/items
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "productId": 1,
+  "quantity": 2
+}
+
+### 3. Ver carrito
+GET {{baseUrl}}/cart
+Authorization: Bearer {{token}}
+
+### 4. Validar
+GET {{baseUrl}}/cart/validate
+Authorization: Bearer {{token}}
+
+### 5. Crear orden
+POST {{baseUrl}}/orders
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "addressId": 1,
+  "paymentMethod": "cash",
+  "deliveryType": "delivery",
+  "deliveryDate": "2024-12-25",
+  "deliveryTimeSlot": "14:00-18:00",
+  "customerNotes": "Favor de llamar al llegar"
+}
+
+### 6. Ver mi orden
+GET {{baseUrl}}/orders/1
+Authorization: Bearer {{token}}
+
+### 7. [ADMIN] Confirmar orden
+PUT {{baseUrl}}/orders/1/status
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "confirmed"
+}
+
+### 8. [ADMIN] Procesar orden
+PUT {{baseUrl}}/orders/1/status
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "processing"
+}
+
+### 9. [ADMIN] Marcar como lista
+PUT {{baseUrl}}/orders/1/status
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "ready"
+}
+
+### 10. [ADMIN] Enviar orden
+PUT {{baseUrl}}/orders/1/status
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "shipped",
+  "trackingNumber": "TRACK-001"
+}
+
+### 11. [ADMIN] Marcar como entregada
+PUT {{baseUrl}}/orders/1/status
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "delivered"
+}
+
+### 12. Ver historial de la orden
+GET {{baseUrl}}/orders/1
+Authorization: Bearer {{token}}

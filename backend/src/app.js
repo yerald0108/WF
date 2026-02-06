@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const cookieParser = require('cookie-parser');
 const { errorHandler } = require('./middleware/errorHandler');
 
 require('./models');
@@ -13,8 +14,11 @@ const app = express();
 app.use(helmet()); // Seguridad HTTP
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true
+  credentials: true // IMPORTANTE: Para permitir cookies
 }));
+
+// Cookie parser (necesario para el carrito de invitados)
+app.use(cookieParser());
 
 // Rate limiting
 const limiter = rateLimit({
@@ -43,12 +47,16 @@ const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const locationsRoutes = require('./routes/locationsRoutes');
+const cartRoutes = require('./routes/cartRoutes');
+const orderRoutes = require('./routes/orderRoutes');
 
 // Registrar rutas
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/locations', locationsRoutes);
+app.use('/api/cart', cartRoutes);
+app.use('/api/orders', orderRoutes);
 
 // Ruta 404
 app.use('*', (req, res) => {

@@ -1,0 +1,257 @@
+### Variables
+@baseUrl = http://localhost:5000/api
+@token = TU_TOKEN_AQUI
+@sessionId = TU_SESSION_ID_AQUI
+
+### ============================================
+### 🛒 CARRITO - USUARIOS INVITADOS
+### ============================================
+
+### 1. Obtener carrito (genera session ID automáticamente)
+GET {{baseUrl}}/cart
+
+### 2. Agregar producto al carrito (como invitado)
+POST {{baseUrl}}/cart/items
+Content-Type: application/json
+
+{
+  "productId": 1,
+  "quantity": 2
+}
+
+### 3. Agregar otro producto
+POST {{baseUrl}}/cart/items
+Content-Type: application/json
+
+{
+  "productId": 2,
+  "quantity": 1
+}
+
+### 4. Obtener conteo rápido
+GET {{baseUrl}}/cart/count
+
+### 5. Actualizar cantidad de un item
+PUT {{baseUrl}}/cart/items/1
+Content-Type: application/json
+
+{
+  "quantity": 3
+}
+
+### 6. Eliminar un item del carrito
+DELETE {{baseUrl}}/cart/items/1
+
+### 7. Validar carrito (verificar stock y precios)
+GET {{baseUrl}}/cart/validate
+
+### 8. Sincronizar precios
+POST {{baseUrl}}/cart/sync-prices
+
+### 9. Vaciar carrito
+DELETE {{baseUrl}}/cart
+
+### ============================================
+### 🛒 CARRITO - USUARIOS AUTENTICADOS
+### ============================================
+
+### 10. Login primero
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@ferreteria.com",
+  "password": "admin123"
+}
+
+### 11. Obtener carrito (autenticado)
+GET {{baseUrl}}/cart
+Authorization: Bearer {{token}}
+
+### 12. Agregar producto (autenticado)
+POST {{baseUrl}}/cart/items
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "productId": 1,
+  "quantity": 2
+}
+
+### 13. Actualizar cantidad (autenticado)
+PUT {{baseUrl}}/cart/items/2
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "quantity": 5
+}
+
+### 14. Eliminar item (autenticado)
+DELETE {{baseUrl}}/cart/items/2
+Authorization: Bearer {{token}}
+
+### 15. Validar carrito (autenticado)
+GET {{baseUrl}}/cart/validate
+Authorization: Bearer {{token}}
+
+### 16. Obtener conteo (autenticado)
+GET {{baseUrl}}/cart/count
+Authorization: Bearer {{token}}
+
+### ============================================
+### 🔄 FUSIÓN DE CARRITOS
+### ============================================
+
+### 17. Mergear carrito de invitado al autenticarse
+# Primero agregar items como invitado, luego hacer login y ejecutar esto:
+POST {{baseUrl}}/cart/merge
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sessionId": "{{sessionId}}"
+}
+
+### ============================================
+### 🧪 CASOS DE PRUEBA AVANZADOS
+### ============================================
+
+### 18. Agregar producto sin stock
+POST {{baseUrl}}/cart/items
+Content-Type: application/json
+
+{
+  "productId": 999,
+  "quantity": 1
+}
+
+### 19. Agregar cantidad que excede el stock
+POST {{baseUrl}}/cart/items
+Content-Type: application/json
+
+{
+  "productId": 1,
+  "quantity": 1000
+}
+
+### 20. Actualizar a cantidad inválida
+PUT {{baseUrl}}/cart/items/1
+Content-Type: application/json
+
+{
+  "quantity": 0
+}
+
+### 21. Obtener carrito vacío
+GET {{baseUrl}}/cart
+
+### ============================================
+### 📊 FLUJO COMPLETO DE COMPRA
+### ============================================
+
+### Paso 1: Obtener carrito inicial
+GET {{baseUrl}}/cart
+
+### Paso 2: Agregar varios productos
+POST {{baseUrl}}/cart/items
+Content-Type: application/json
+
+{
+  "productId": 1,
+  "quantity": 2
+}
+
+###
+POST {{baseUrl}}/cart/items
+Content-Type: application/json
+
+{
+  "productId": 2,
+  "quantity": 1
+}
+
+###
+POST {{baseUrl}}/cart/items
+Content-Type: application/json
+
+{
+  "productId": 3,
+  "quantity": 3
+}
+
+### Paso 3: Ver resumen del carrito
+GET {{baseUrl}}/cart
+
+### Paso 4: Validar antes de proceder al checkout
+GET {{baseUrl}}/cart/validate
+
+### Paso 5: Sincronizar precios (por si cambiaron)
+POST {{baseUrl}}/cart/sync-prices
+
+### Paso 6: Actualizar cantidades si es necesario
+PUT {{baseUrl}}/cart/items/1
+Content-Type: application/json
+
+{
+  "quantity": 1
+}
+
+### Paso 7: Obtener carrito final antes de checkout
+GET {{baseUrl}}/cart
+
+### ============================================
+### 🔐 FLUJO CON AUTENTICACIÓN
+### ============================================
+
+### A. Como invitado: agregar productos
+POST {{baseUrl}}/cart/items
+Content-Type: application/json
+
+{
+  "productId": 1,
+  "quantity": 2
+}
+
+### B. Registrarse / Login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "cliente@ejemplo.com",
+  "password": "password123"
+}
+
+### C. Fusionar carrito de invitado
+POST {{baseUrl}}/cart/merge
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sessionId": "{{sessionId}}"
+}
+
+### D. Ver carrito fusionado
+GET {{baseUrl}}/cart
+Authorization: Bearer {{token}}
+
+### ============================================
+### 🛠️ PRUEBAS DE ADMINISTRACIÓN
+### ============================================
+
+### Ver productos con bajo stock (que afectan el carrito)
+GET {{baseUrl}}/products/admin/low-stock
+Authorization: Bearer {{token}}
+
+### Actualizar stock de un producto (para probar validación)
+PATCH {{baseUrl}}/products/1/stock
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "stock": 5,
+  "operation": "set"
+}
+
+### Luego validar carrito de nuevo
+GET {{baseUrl}}/cart/validate
