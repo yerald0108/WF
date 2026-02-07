@@ -1,6 +1,6 @@
 ### Variables
 @baseUrl = http://localhost:5000/api
-@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiaWF0IjoxNzcwNDE0OTE5LCJleHAiOjE3NzEwMTk3MTl9.SJNvtf3HdZosY_M5ElsZrsIgmIlCVINmoAm6lLGkmR4
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiaWF0IjoxNzcwNDY2NTA2LCJleHAiOjE3NzEwNzEzMDZ9.krJBGLxuJICecd3YLQppG7x95DYj-b6Sjb72dzPR5-A
 @adminToken = TU_ADMIN_TOKEN_AQUI
 @orderId = 1
 

@@ -26,37 +26,37 @@ const Order = sequelize.define('Order', {
   },
   status: {
     type: DataTypes.ENUM(
-      'pending',      // Pendiente de confirmación
-      'confirmed',    // Confirmada
-      'processing',   // En preparación
-      'ready',        // Lista para entrega
-      'shipped',      // Enviada
-      'delivered',    // Entregada
-      'cancelled',    // Cancelada
-      'refunded'      // Reembolsada
+      'pending',
+      'confirmed',
+      'processing',
+      'ready',
+      'shipped',
+      'delivered',
+      'cancelled',
+      'refunded'
     ),
     defaultValue: 'pending',
     allowNull: false
   },
   payment_status: {
     type: DataTypes.ENUM(
-      'pending',      // Pendiente
-      'paid',         // Pagado
-      'failed',       // Fallido
-      'refunded',     // Reembolsado
-      'partial'       // Pago parcial
+      'pending',
+      'paid',
+      'failed',
+      'refunded',
+      'partial'
     ),
     defaultValue: 'pending',
     allowNull: false
   },
   payment_method: {
     type: DataTypes.ENUM(
-      'cash',         // Efectivo
-      'transfer',     // Transferencia
-      'card',         // Tarjeta
-      'yappy',        // Yappy
-      'nequi',        // Nequi
-      'other'         // Otro
+      'cash',
+      'transfer',
+      'card',
+      'yappy',
+      'nequi',
+      'other'
     ),
     allowNull: false
   },
@@ -81,8 +81,6 @@ const Order = sequelize.define('Order', {
     type: DataTypes.DECIMAL(10, 2),
     allowNull: false
   },
-  
-  // Información de envío
   shipping_address: {
     type: DataTypes.JSONB,
     allowNull: false,
@@ -101,10 +99,8 @@ const Order = sequelize.define('Order', {
   delivery_time_slot: {
     type: DataTypes.STRING,
     allowNull: true,
-    comment: 'Horario de entrega: "08:00-12:00", "14:00-18:00"'
+    comment: 'Horario de entrega'
   },
-  
-  // Información de contacto
   customer_name: {
     type: DataTypes.STRING,
     allowNull: false
@@ -117,8 +113,6 @@ const Order = sequelize.define('Order', {
     type: DataTypes.STRING,
     allowNull: false
   },
-  
-  // Notas y referencias
   customer_notes: {
     type: DataTypes.TEXT,
     allowNull: true,
@@ -129,8 +123,6 @@ const Order = sequelize.define('Order', {
     allowNull: true,
     comment: 'Notas internas del administrador'
   },
-  
-  // Información de pago
   payment_reference: {
     type: DataTypes.STRING,
     allowNull: true,
@@ -140,8 +132,6 @@ const Order = sequelize.define('Order', {
     type: DataTypes.DATE,
     allowNull: true
   },
-  
-  // Seguimiento
   tracking_number: {
     type: DataTypes.STRING,
     allowNull: true,
@@ -170,6 +160,7 @@ const Order = sequelize.define('Order', {
     { fields: ['delivery_date'] },
     { fields: ['createdAt'] }
   ]
+  // ⭐ NO hay hooks aquí - el order_number se genera en el servicio
 });
 
 const OrderItem = sequelize.define('OrderItem', {
@@ -238,7 +229,6 @@ const OrderItem = sequelize.define('OrderItem', {
   ]
 });
 
-// Historial de cambios de estado
 const OrderStatusHistory = sequelize.define('OrderStatusHistory', {
   id: {
     type: DataTypes.INTEGER,
@@ -288,34 +278,7 @@ OrderItem.belongsTo(Product, { foreignKey: 'product_id' });
 Order.hasMany(OrderStatusHistory, { foreignKey: 'order_id', as: 'statusHistory', onDelete: 'CASCADE' });
 OrderStatusHistory.belongsTo(Order, { foreignKey: 'order_id' });
 
-// Hooks para Order
-Order.beforeCreate(async (order) => {
-  // Generar número de orden único
-  if (!order.order_number) {
-    const date = new Date();
-    const year = date.getFullYear().toString().slice(-2);
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const timestamp = Date.now().toString().slice(-6);
-    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    
-    order.order_number = `ORD-${year}${month}-${timestamp}${random}`;
-  }
-});
-
-Order.afterUpdate(async (order, options) => {
-  // Registrar cambio de estado en el historial
-  if (order.changed('status')) {
-    const previousStatus = order._previousDataValues.status;
-    await OrderStatusHistory.create({
-      order_id: order.id,
-      previous_status: previousStatus,
-      new_status: order.status,
-      changed_by: options.userId || null
-    });
-  }
-});
-
-// Métodos de instancia para Order
+// Métodos de instancia
 Order.prototype.canBeCancelled = function() {
   return ['pending', 'confirmed'].includes(this.status);
 };

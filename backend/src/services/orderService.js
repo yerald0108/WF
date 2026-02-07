@@ -8,6 +8,12 @@ const { Op } = require('sequelize');
 const { sequelize } = require('../config/database');
 const CartService = require('./cartService');
 const { sendOrderConfirmationEmail, sendOrderStatusUpdateEmail } = require('./emailService');
+const { 
+  generateOrderNumber, 
+  isValidStatusTransition, 
+  getStatusMessage, 
+  getPaymentMethodLabel 
+} = require('../utils/orderHelpers');
 
 class OrderService {
   /**
@@ -81,16 +87,21 @@ class OrderService {
       // 5. Calcular totales
       const totals = await CartService.calculateTotals(cart.id);
 
-      // 6. Crear orden
+      // 6. GENERAR NÚMERO DE ORDEN (CRÍTICO)
+      const orderNumber = generateOrderNumber();
+      console.log('🔢 Número de orden generado:', orderNumber);
+
+      // 7. Crear orden CON el número de orden
       const order = await Order.create({
+        order_number: orderNumber, // ⭐ EXPLÍCITAMENTE ASIGNADO
         user_id: userId,
         status: 'pending',
         payment_status: 'pending',
         payment_method: paymentMethod,
         subtotal: totals.subtotal,
         discount: totals.discount,
-        shipping_cost: deliveryType === 'delivery' ? 5.00 : 0, // Costo de envío fijo
-        tax: 0, // Sin impuestos en Cuba por ahora
+        shipping_cost: deliveryType === 'delivery' ? 5.00 : 0,
+        tax: 0,
         total: totals.total + (deliveryType === 'delivery' ? 5.00 : 0),
         shipping_address: shippingAddress,
         delivery_type: deliveryType,
@@ -102,7 +113,9 @@ class OrderService {
         customer_notes: customerNotes || null
       }, { transaction });
 
-      // 7. Crear items de la orden
+      console.log('✅ Orden creada con ID:', order.id, 'y número:', order.order_number);
+
+      // 8. Crear items de la orden
       const items = await CartItem.findAll({
         where: { cart_id: cart.id },
         include: [{ model: Product }]
@@ -142,16 +155,16 @@ class OrderService {
         });
       }
 
-      // 8. Marcar carrito como completado
+      // 9. Marcar carrito como completado
       await cart.update({ status: 'completed' }, { transaction });
 
-      // 9. Commit transaction
+      // 10. Commit transaction
       await transaction.commit();
 
-      // 10. Obtener orden completa con items
+      // 11. Obtener orden completa con items
       const completeOrder = await this.getOrderById(order.id);
 
-      // 11. Enviar email de confirmación
+      // 12. Enviar email de confirmación
       try {
         await sendOrderConfirmationEmail(user.email, {
           orderNumber: order.order_number,
@@ -164,7 +177,7 @@ class OrderService {
             total: item.total
           })),
           shippingAddress: order.shipping_address,
-          paymentMethod: this.getPaymentMethodLabel(order.payment_method)
+          paymentMethod: getPaymentMethodLabel(order.payment_method)
         });
       } catch (emailError) {
         console.error('Error enviando email de confirmación:', emailError);
@@ -181,8 +194,6 @@ class OrderService {
 
   /**
    * Obtener orden por ID
-   * @param {number} orderId - ID de la orden
-   * @returns {Object} - Orden completa
    */
   static async getOrderById(orderId) {
     const order = await Order.findByPk(orderId, {
@@ -216,9 +227,6 @@ class OrderService {
 
   /**
    * Obtener órdenes de un usuario
-   * @param {number} userId - ID del usuario
-   * @param {Object} options - Opciones de filtrado y paginación
-   * @returns {Object} - Lista de órdenes
    */
   static async getUserOrders(userId, options = {}) {
     const {
@@ -275,9 +283,6 @@ class OrderService {
 
   /**
    * Actualizar estado de una orden
-   * @param {number} orderId - ID de la orden
-   * @param {string} newStatus - Nuevo estado
-   * @param {Object} options - Opciones adicionales
    */
   static async updateOrderStatus(orderId, newStatus, options = {}) {
     const { userId, notes, trackingNumber } = options;
@@ -290,7 +295,7 @@ class OrderService {
     const previousStatus = order.status;
 
     // Validar transición de estado
-    if (!this.isValidStatusTransition(previousStatus, newStatus)) {
+    if (!isValidStatusTransition(previousStatus, newStatus)) {
       throw new Error(`No se puede cambiar de ${previousStatus} a ${newStatus}`);
     }
 
@@ -334,7 +339,7 @@ class OrderService {
           orderNumber: order.order_number,
           userName: `${user.first_name} ${user.last_name}`,
           status: newStatus,
-          statusMessage: this.getStatusMessage(newStatus),
+          statusMessage: getStatusMessage(newStatus),
           trackingNumber: order.tracking_number
         });
       }
@@ -347,7 +352,6 @@ class OrderService {
 
   /**
    * Restaurar stock de una orden cancelada
-   * @param {number} orderId - ID de la orden
    */
   static async restoreOrderStock(orderId) {
     const items = await OrderItem.findAll({
@@ -365,9 +369,6 @@ class OrderService {
 
   /**
    * Cancelar orden
-   * @param {number} orderId - ID de la orden
-   * @param {number} userId - ID del usuario que cancela
-   * @param {string} reason - Razón de cancelación
    */
   static async cancelOrder(orderId, userId, reason) {
     const order = await Order.findByPk(orderId);
@@ -406,10 +407,8 @@ class OrderService {
       if (endDate) where.createdAt[Op.lte] = new Date(endDate);
     }
 
-    // Total de órdenes
     const totalOrders = await Order.count({ where });
 
-    // Órdenes por estado
     const ordersByStatus = await Order.findAll({
       where,
       attributes: [
@@ -420,7 +419,6 @@ class OrderService {
       group: ['status']
     });
 
-    // Ingresos totales
     const revenue = await Order.sum('total', {
       where: {
         ...where,
@@ -428,7 +426,6 @@ class OrderService {
       }
     });
 
-    // Ticket promedio
     const avgOrderValue = await Order.findOne({
       where,
       attributes: [
@@ -436,7 +433,6 @@ class OrderService {
       ]
     });
 
-    // Top productos vendidos
     const topProducts = await OrderItem.findAll({
       attributes: [
         'product_id',
@@ -465,58 +461,6 @@ class OrderService {
         revenue: parseFloat(item.dataValues.revenue)
       }))
     };
-  }
-
-  /**
-   * Validar transición de estado
-   */
-  static isValidStatusTransition(currentStatus, newStatus) {
-    const transitions = {
-      'pending': ['confirmed', 'cancelled'],
-      'confirmed': ['processing', 'cancelled'],
-      'processing': ['ready', 'cancelled'],
-      'ready': ['shipped', 'cancelled'],
-      'shipped': ['delivered'],
-      'delivered': [],
-      'cancelled': [],
-      'refunded': []
-    };
-
-    return transitions[currentStatus]?.includes(newStatus) || false;
-  }
-
-  /**
-   * Obtener mensaje amigable del estado
-   */
-  static getStatusMessage(status) {
-    const messages = {
-      'pending': 'Orden Pendiente de Confirmación',
-      'confirmed': 'Orden Confirmada',
-      'processing': 'Orden en Preparación',
-      'ready': 'Orden Lista para Entrega',
-      'shipped': 'Orden Enviada',
-      'delivered': 'Orden Entregada',
-      'cancelled': 'Orden Cancelada',
-      'refunded': 'Orden Reembolsada'
-    };
-
-    return messages[status] || status;
-  }
-
-  /**
-   * Obtener etiqueta del método de pago
-   */
-  static getPaymentMethodLabel(method) {
-    const labels = {
-      'cash': 'Efectivo',
-      'transfer': 'Transferencia Bancaria',
-      'card': 'Tarjeta',
-      'yappy': 'Yappy',
-      'nequi': 'Nequi',
-      'other': 'Otro'
-    };
-
-    return labels[method] || method;
   }
 
   /**
